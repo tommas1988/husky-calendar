@@ -165,6 +165,7 @@ export default {
                 container: {
                   backgroundColor: level.bgColor,
                   transition: `background-color ${Math.floor(300 + Math.random() * 700)}ms ease-in`,
+                  transitionDelay: `${Math.floor(Math.random() * 400)}ms`
                 },
                 content: { color: level.fontColor },
               };
