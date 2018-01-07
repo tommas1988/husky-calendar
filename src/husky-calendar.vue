@@ -1,5 +1,5 @@
 <template>
-  <div :style="{ width: width + 'px' }">
+  <div class="hc" :style="{ width: size.width + 'px', height: size.height + 'px' }">
     <div class="hc-header">
       <div class="hc-prev-month left" @click="prevMonth">
         <Icon type="ios-arrow-thin-left" size="40" />
@@ -47,7 +47,6 @@
                     class="hc-tooltip"
                     :content="acitveDayContextList[day.date-1].content"
                     placement="right"
-                    :transfer="true"
                     :disabled="acitveDayContextList[day.date-1].content === null">
                     <span class="hc-day" :style="acitveDayContextList[day.date-1].styles.content">{{ day.date }}</span>
                   </Tooltip>
@@ -70,7 +69,7 @@ const date = new Date();
 export default {
   name: 'HuskyCalendar',
 
-  props: ['width', 'grades', 'dataSource'],
+  props: ['size', 'grades', 'dataSource'],
 
   data() {
     return {
@@ -226,18 +225,59 @@ export default {
 </script>
 
 <style lang="scss">
-.hc-header {
-  &:after {
-    display: table;
-    content: "";
-    line-height: 0;
-    clear: both;
-  }
+.hc {
+  display: flex;
+  flex-direction: column;
 
-  .left {
-    float: left;
-    margin: 0 4px;
+  .hc-body {
+    flex: 1 1 auto;
+
+    position: relative;
+
+    & > div {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    .left-enter-to, .right-enter-to {
+      opacity: 1;
+    }
+
+    .left-leave-to,
+    .left-enter,
+    .right-leave-to,
+    .right.enter {
+      opacity: 0;
+    }
+
+    .left-leave-to, .right-enter {
+      transform: translateX(150px);
+    }
+
+    .left-enter, .right-leave-to {
+      transform: translateX(-150px);
+    }
+
+    .left-leave, .right-leave {
+      opacity: 1;
+    }
+
+    .left-enter-active,
+    .left-leave-active,
+    .right-enter-active,
+    .right-leave-active {
+      transition: all 0.4s ease;
+    }
   }
+}
+
+.hc-header {
+  display: flex;
+  flex-flow: row nowrap;
 
   .hc-current-month {
     font-size: 30px;
@@ -249,44 +289,9 @@ export default {
   .hc-next-month:hover {
     cursor: pointer;
   }
-}
 
-.hc-body {
-  position: relative;
-
-  & > div {
-    position: absolute;
-    width: 100%;
-  }
-
-  .left-enter-to, .right-enter-to {
-    opacity: 1;
-  }
-
-  .left-leave-to,
-  .left-enter,
-  .right-leave-to,
-  .right.enter {
-    opacity: 0;
-  }
-
-  .left-leave-to, .right-enter {
-    transform: translateX(150px);
-  }
-
-  .left-enter, .right-leave-to {
-    transform: translateX(-150px);
-  }
-
-  .left-leave, .right-leave {
-    opacity: 1;
-  }
-
-  .left-enter-active,
-  .left-leave-active,
-  .right-enter-active,
-  .right-leave-active {
-    transition: all 0.4s ease;
+  .hc-prev-month {
+    margin-right: 2px;
   }
 }
 
@@ -296,83 +301,82 @@ export default {
   border-right: 1px solid #e1e1e1;
   border-left: 1px solid #e1e1e1;
   border-radius: 2px;
-}
 
-.hc-row-head {
-  .week-name {
-    margin-left: 4px;
-    font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+
+  .hc-row-fluid {
+    flex: 1 1 auto;
   }
 }
 
+.hc-row-head {
+    .week-name {
+      margin-left: 4px;
+      font-size: 16px;
+    }
+}
+
 .hc-row-fluid {
-  width: 100%;
+  display: flex;
+  flex-flow: row nowrap;
+
   border-bottom: 1px solid #e1e1e1;
   margin-left: 0px;
   margin-right: 0px;
 
-  &:before,
-  &:after {
-    display: table;
-    content: "";
-    line-height: 0;
-  }
-
-  &:after {
-    clear: both;
+  & > div {
+    flex: 1 1 14.285714285714285%;;
   }
 
   .hc-cell {
-    width: 14.285714285714285%;
-    display: block;
-    float: left;
-    box-sizing: border-box;
     border-right: 1px solid #e1e1e1;
     user-select: none;
 
     &:last-child {
       border-right: 0px;
     }
-  }
-}
 
-.hc-inmonth {
-  transition: transform 150ms;
+    .hc-month-day {
+      height: 100%;
+    }
 
-  // &:hover {
-  //   transform: scale(1.05, 1.05);
-  //   box-shadow: 0 0 4px #9e9e9e;
-  //   background-color: #eeeeee;
-  // }
-}
+    .hc-day {
+      float: right;
+      margin-top: 15px;
+      margin-right: 15px;
+      font-size: 25px;
+      color: #777;
+    }
 
-.hc-month-day {
-  height: 80px;
-}
+    .hc-inmonth {
+      display: flex;
 
-.hc-outmonth {
-  background-color: #eeeeee;
-}
+      .hc-tooltip {
+        display: flex;
+        flex: 1 1 auto;
 
-.hc-day {
-  float: right;
-  margin-top: 15px;
-  margin-right: 15px;
-  font-size: 25px;
-  color: #777;
-}
+        & > div {
+          flex: 1 1 auto;
+        }
+      }
+      // transition: transform 150ms;
 
-.hc-outmonth .hc-day {
-  color: #e0e0e0;
-}
+      // &:hover {
+      //   transform: scale(1.05, 1.05);
+      //   box-shadow: 0 0 4px #9e9e9e;
+      //   background-color: #eeeeee;
+      // }
+    }
 
-.hc-tooltip {
-  width: 100%;
-  height: 100%;
+    .hc-outmonth {
+      background-color: #eeeeee;
 
-  & > div:first-child {
-    width: 100%;
-    height: 100%;
+      .hc-day {
+        color: #e0e0e0;
+      }
+    }
   }
 }
 </style>

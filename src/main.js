@@ -14,7 +14,7 @@ new Vue({
   el: '#app',
   template: `<husky-calendar
               class="husky-calendar"
-              width="800"
+              :size="{ width: 800, height: 500 }"
               :dataSource="expenses"
               :grades="grades"
               @date-change="getExpenses" />`,
