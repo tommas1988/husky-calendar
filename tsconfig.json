@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "outDir": "./ts-out/",
+        "sourceMap": true,
+        // "strict": true,
+        "module": "es2015",
+        "moduleResolution": "node",
+        "target": "es5",
+        "experimentalDecorators": true,
+        "typeRoots": [
+            "./typings",
+        ]
+    },
+    "include": [
+        "./src/**/*",
+        "./typings",
+    ]
+}

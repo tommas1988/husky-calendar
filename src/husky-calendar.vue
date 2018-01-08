@@ -1,5 +1,5 @@
 <template>
-  <div class="hc" :style="{ width: size.width + 'px', height: size.height + 'px' }">
+  <div class="hc" :style="displaySize">
     <div class="hc-header">
       <div class="hc-prev-month left" @click="prevMonth">
         <Icon type="ios-arrow-thin-left" size="40" />
@@ -63,165 +63,170 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Vue, Component, Prop } from "vue-property-decorator";
+import { SizeProp, GradeEntryProp, DataSourceProp } from "husky-calendar-types";
+
 const date = new Date();
 
-export default {
-  name: 'HuskyCalendar',
+@Component
+export default class HuskyCalendar extends Vue {
+  @Prop() size: SizeProp;
+  @Prop() grades: GradeEntryProp[];
+  @Prop() dataSource: DataSourceProp;
 
-  props: ['size', 'grades', 'dataSource'],
+  date: Date;
+  inDateChanging: boolean = false;
+  year: number = date.getFullYear();
+  month: number = date.getMonth() + 1;
+  transitionDirection: 'left'|'right';
 
-  data() {
-    return {
-      date,
-      inDateChanging: false,
-      year: date.getFullYear(),
-      month: date.getMonth() + 1,
-      transitionDirection: ''
-    };
-  },
+  get displaySize() {
+    return { width: this.size.width + 'px', height: this.size.height + 'px' }
+  }
 
-  computed: {
-    dayList() {
-      let year = this.year;
-      let monthNum = this.month - 1;
-      let firstDayOfMonth = new Date(year, monthNum, 1).getDay();
-      let dayCountOfMonth = new Date(year, monthNum + 1, 0).getDate();
-      let list = [];
-      let week;
+  get dayList() {
+    let year = this.year;
+    let monthNum = this.month - 1;
+    let firstDayOfMonth = new Date(year, monthNum, 1).getDay();
+    let dayCountOfMonth = new Date(year, monthNum + 1, 0).getDate();
+    let list = [];
+    let week;
 
-      week = [];
-      if (firstDayOfMonth > 0) {
-        let dayCountOfLastMonth = new Date(year, monthNum, 0).getDate();
-        for (let i = firstDayOfMonth - 1; i >= 0; i--) {
-          week.push({
-            inMonth: false,
-            date: dayCountOfLastMonth - i
-          });
-        }
+    week = [];
+    if (firstDayOfMonth > 0) {
+      let dayCountOfLastMonth = new Date(year, monthNum, 0).getDate();
+      for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+        week.push({
+          inMonth: false,
+          date: dayCountOfLastMonth - i
+        });
+      }
+    }
+
+    for (let i = 1; i <= dayCountOfMonth; i++) {
+      if (week.length === 7) {
+        list.push(week);
+        week = [];
       }
 
-      for (let i = 1; i <= dayCountOfMonth; i++) {
-        if (week.length === 7) {
-          list.push(week);
-          week = [];
-        }
+      week.push({
+        inMonth: true,
+        date: i
+      });
+    }
 
+    let leftDays = 7 - week.length;
+    if (leftDays) {
+      for (let i = 1; i <= leftDays; i++) {
         week.push({
-          inMonth: true,
+          inMonth: false,
           date: i
         });
       }
+    }
 
-      let leftDays = 7 - week.length;
-      if (leftDays) {
-        for (let i = 1; i <= leftDays; i++) {
-          week.push({
-            inMonth: false,
-            date: i
-          });
-        }
+    list.push(week);
+
+    let startDay = leftDays;
+    while (list.length < 6) {
+      week = [];
+      for (let i = 1; i <= 7; i++) {
+        week.push({
+          inMonth: false,
+          date: i + startDay
+        });
       }
 
       list.push(week);
-
-      let startDay = leftDays;
-      while (list.length < 6) {
-        week = [];
-        for (let i = 1; i <= 7; i++) {
-          week.push({
-            inMonth: false,
-            date: i + startDay
-          });
-        }
-
-        list.push(week);
-        startDay += 7;
-      }
-
-      return list;
-    },
-
-    // TODO: need a better name
-    acitveDayContextList() {
-      let list = [];
-
-      if (!this.inDateChanging && this.dataSource && this.dataSource.date === this.date) {
-        for (let val of this.dataSource.entries) {
-          let styles = {
-            container: null,
-            content: null
-          };
-
-          for (let level of this.grades) {
-            let range = level.range;
-
-            if (
-              (isNaN(range[0]) || val >= range[0]) &&
-              (isNaN(range[1]) || val <= range[1])
-            ) {
-              styles = {
-                container: {
-                  backgroundColor: level.bgColor,
-                  transition: `background-color ${Math.floor(300 + Math.random() * 700)}ms ease-in`,
-                  transitionDelay: `${Math.floor(Math.random() * 400)}ms`
-                },
-                content: { color: level.fontColor },
-              };
-            }
-          }
-
-          list.push({
-            styles,
-            content: val,
-          });
-        }
-      } else {
-        // TODO: should not calculate every time
-        for (let i = 1; i < 32; i++) {
-          list.push({
-            styles: { container: null, content: null },
-            content: null
-          });
-        }
-      }
-
-      return list;
+      startDay += 7;
     }
-  },
 
-  methods: {
-    prevMonth() {
-      let date = new Date(this.year, this.month - 2);
-
-      this.date = date;
-      this.year = date.getFullYear();
-      this.month = date.getMonth() + 1;
-
-      this.inDateChanging = true;
-      this.transitionDirection = "left";
-
-      this.$nextTick(() => {
-        this.$emit("date-change", date);
-      });
-    },
-
-    nextMonth() {
-      let date = new Date(this.year, this.month);
-
-      this.date = date;
-      this.year = date.getFullYear();
-      this.month = date.getMonth() + 1;
-
-      this.inDateChanging = true;
-      this.transitionDirection = "right";
-
-      this.$nextTick(() => {
-        this.$emit("date-change", date);
-      });
-    },
+    return list;
   }
-};
+
+  get acitveDayContextList() {
+    let list = [];
+
+    if (
+      !this.inDateChanging &&
+      this.dataSource &&
+      this.dataSource.date === this.date
+    ) {
+      for (let val of this.dataSource.entries) {
+        let styles = {
+          container: null,
+          content: null
+        };
+
+        for (let level of this.grades) {
+          let range = level.range;
+
+          if (
+            (isNaN(range[0]) || val >= range[0]) &&
+            (isNaN(range[1]) || val <= range[1])
+          ) {
+            styles = {
+              container: {
+                backgroundColor: level.bgColor,
+                transition: `background-color ${Math.floor(
+                  300 + Math.random() * 700
+                )}ms ease-in`,
+                transitionDelay: `${Math.floor(Math.random() * 400)}ms`
+              },
+              content: { color: level.fontColor }
+            };
+          }
+        }
+
+        list.push({
+          styles,
+          content: val
+        });
+      }
+    } else {
+      // TODO: should not calculate every time
+      for (let i = 1; i < 32; i++) {
+        list.push({
+          styles: { container: null, content: null },
+          content: null
+        });
+      }
+    }
+
+    return list;
+  }
+
+  prevMonth() {
+    let date = new Date(this.year, this.month - 2);
+
+    this.date = date;
+    this.year = date.getFullYear();
+    this.month = date.getMonth() + 1;
+
+    this.inDateChanging = true;
+    this.transitionDirection = "left";
+
+    this.$nextTick(() => {
+      this.$emit("date-change", date);
+    });
+  }
+
+  nextMonth() {
+    let date = new Date(this.year, this.month);
+
+    this.date = date;
+    this.year = date.getFullYear();
+    this.month = date.getMonth() + 1;
+
+    this.inDateChanging = true;
+    this.transitionDirection = "right";
+
+    this.$nextTick(() => {
+      this.$emit("date-change", date);
+    });
+  }
+}
 </script>
 
 <style lang="scss">
@@ -230,6 +235,7 @@ export default {
   flex-direction: column;
 
   .hc-body {
+    overflow: hidden;
     flex: 1 1 auto;
 
     position: relative;
@@ -243,7 +249,8 @@ export default {
       flex-direction: column;
     }
 
-    .left-enter-to, .right-enter-to {
+    .left-enter-to,
+    .right-enter-to {
       opacity: 1;
     }
 
@@ -254,15 +261,18 @@ export default {
       opacity: 0;
     }
 
-    .left-leave-to, .right-enter {
-      transform: translateX(150px);
+    .left-leave-to,
+    .right-enter {
+      transform: translateX(300px);
     }
 
-    .left-enter, .right-leave-to {
-      transform: translateX(-150px);
+    .left-enter,
+    .right-leave-to {
+      transform: translateX(-300px);
     }
 
-    .left-leave, .right-leave {
+    .left-leave,
+    .right-leave {
       opacity: 1;
     }
 
@@ -312,10 +322,10 @@ export default {
 }
 
 .hc-row-head {
-    .week-name {
-      margin-left: 4px;
-      font-size: 16px;
-    }
+  .week-name {
+    margin-left: 4px;
+    font-size: 16px;
+  }
 }
 
 .hc-row-fluid {
@@ -327,7 +337,7 @@ export default {
   margin-right: 0px;
 
   & > div {
-    flex: 1 1 14.285714285714285%;;
+    flex: 1 1 14.285714285714285%;
   }
 
   .hc-cell {

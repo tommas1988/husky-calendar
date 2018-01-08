@@ -4,20 +4,21 @@ import Vue from 'vue';
 import iView from 'iview';
 import 'iview/dist/styles/iview.css';
 
-import HuskyCalendar from './husky-calendar';
+import HuskyCalendar from './husky-calendar.vue';
 
 Vue.use(iView);
 Vue.config.productionTip = false;
 
-/* eslint-disable no-new */
+let template = `<husky-calendar
+class="husky-calendar"
+:size="{ width: 800, height: 500 }"
+:dataSource="expenses"
+:grades="grades"
+@date-change="getExpenses" />`;
+
 new Vue({
   el: '#app',
-  template: `<husky-calendar
-              class="husky-calendar"
-              :size="{ width: 800, height: 500 }"
-              :dataSource="expenses"
-              :grades="grades"
-              @date-change="getExpenses" />`,
+  template,
   components: { HuskyCalendar },
 
   data: {
@@ -32,10 +33,10 @@ new Vue({
   },
 
   methods: {
-    getExpenses(date) {
+    getExpenses(date: Date) {
       let dayCount = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
-      let entries = [];
+      let entries: any[] = [];
       for (let i = 0; i < dayCount; i++) {
         entries.push(Math.floor(Math.random() * 110));
       }
