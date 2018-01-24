@@ -64,6 +64,8 @@
 </template>
 
 <script lang="ts">
+/// <reference path="./husky-calendar-types.d.ts" />
+
 import { Vue, Component, Prop } from "vue-property-decorator";
 import { SizeProp, GradeEntryProp, DataSourceProp } from "husky-calendar-types";
 
